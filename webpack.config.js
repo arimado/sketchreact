@@ -1,5 +1,6 @@
 const path = require('path');
-const HtmlWebPackPlugin = require("html-webpack-plugin");
+const HtmlWebPackPlugin = require('html-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/index.js',
@@ -7,23 +8,21 @@ module.exports = {
     filename: 'main.js',
     path: path.resolve(__dirname, 'dist')
   },
-  devtool: 'inline-source-map',
+  devtool: 'source-map',
   devServer: {
-    contentBase: './dist'
+    contentBase: './dist',
+    hot: true
   },
   module: {
     rules: [
       {
-        test: /\.js$/,
+        test: /\.(js|jsx)/,
         exclude: /node_modules/,
         use: ['babel-loader']
       },
       {
         test: /\.css$/,
-        use: [
-          'style-loader',
-          'css-loader'
-        ]
+        use: ['style-loader', 'css-loader']
       },
       {
         test: /\.(png|svg|jpg|gif)$/,
@@ -31,20 +30,29 @@ module.exports = {
       },
       {
         test: /\.sketch$/,
-        use: [ 'sketch-react-loader']
-      },
+        use: ['sketch-react-loader']
+      }
     ]
   },
   resolveLoader: {
     modules: ['node_modules'],
     alias: {
-      'sketch-react-loader': path.join(__dirname, 'loaders/sketckreact/index.js')
+      'sketch-react-loader': path.join(
+        __dirname,
+        'loaders/sketckreact/index.js'
+      )
     }
   },
   plugins: [
     new HtmlWebPackPlugin({
-      template: "./src/index.html",
-      filename: "./index.html"
+      template: './src/index.html',
+      filename: './index.html'
+    }),
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.DefinePlugin({
+      'process.env': {
+        NODE_ENV: JSON.stringify(process.env.NODE_ENV)
+      }
     })
   ]
 };
