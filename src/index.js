@@ -4,14 +4,23 @@ import _ from 'lodash';
 import './style.css';
 import BenderImg from './bender.jpg';
 import SimpleDesignData from './sketch/simple.sketch';
+import CreditPackData from './sketch/credit-pack-tile.sketch';
 import { hot } from 'react-hot-loader';
 import Design from './components/Design/Design.jsx';
 
 const HotDesign = hot(module)(Design);
 
+const getStyles = (style) => {
+  const styles = ['borders', 'fills', 'shadows', 'innerShadows'];
+  return Object.entries(style)
+    .filter(([key, val]) => styles.includes(key))
+    .map(([key, val]) => ({ [key]: val }));
+};
+
 const buildRectangle = (layer) => {
   const {
-    frame: { height, width, x, y }
+    frame: { height, width, x, y },
+    style
   } = layer;
   return (
     <div
@@ -19,21 +28,35 @@ const buildRectangle = (layer) => {
       style={{
         width,
         height,
+        position: 'absolute',
+        top: y,
+        left: x,
         background: 'blue'
       }}
     />
   );
 };
 
+const buildShapeGroup = (layer) => {
+  switch (layer.name) {
+    case 'Rectangle':
+      return buildRectangle(layer);
+    case 'shapeGroup':
+      return buildShapeGroup(layer);
+    default:
+      return null;
+  }
+};
+
 const buildLayers = (layers) => {
   return layers.map((layer) => {
     switch (layer._class) {
       case 'shapeGroup':
+        return buildShapeGroup(layer);
+      case 'group':
         return buildLayers(layer.layers);
-      case 'rectangle':
-        return buildRectangle(layer);
       default:
-        return layer;
+        return null;
     }
   });
 };
@@ -75,6 +98,7 @@ class DesignPresenter extends React.Component {
   }
   componentDidMount() {
     const data = this.state.data;
+    console.log(data);
   }
   render() {
     const { data } = this.state;
@@ -88,6 +112,6 @@ class DesignPresenter extends React.Component {
 }
 
 ReactDOM.render(
-  <DesignPresenter data={SimpleDesignData} />,
+  <DesignPresenter data={CreditPackData} />,
   document.getElementById('sketchreactapp')
 );
