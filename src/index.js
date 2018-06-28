@@ -80,8 +80,39 @@ const getStyles = (style) => {
     }, {});
 };
 
-const Frame = ({ x, y, width, height, children, styles, isVisible }) => {
+const showDetailsClickHandler = (e) => {};
+
+const Frame = ({
+  x,
+  y,
+  width,
+  height,
+  children,
+  styles,
+  isVisible,
+  classLabel
+}) => {
   const visibilityStyles = isVisible ? {} : { display: 'none' };
+  if (classLabel === '411D6A8B-A708-4F0E-926F-0104E56D3C4C') {
+    return (
+      <div
+        style={{
+          width,
+          height,
+          position: 'absolute',
+          top: y,
+          left: x,
+          ...styles,
+          ...visibilityStyles
+        }}
+        className={classLabel}
+        onClick={showDetailsClickHandler}
+      >
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div
       style={{
@@ -93,6 +124,7 @@ const Frame = ({ x, y, width, height, children, styles, isVisible }) => {
         ...styles,
         ...visibilityStyles
       }}
+      className={classLabel}
     >
       {children}
     </div>
@@ -110,7 +142,7 @@ const Text = ({
   const { alpha, blue, green, red } = getColor(
     MSAttributedStringColorAttribute
   );
-  const { size } = MSAttributedStringFontAttribute.attributes;
+  const { size, name } = MSAttributedStringFontAttribute.attributes;
   const { maximumLineHeight } = paragraphStyle;
   const textTransformStyles = MSAttributedStringTextTransformAttribute
     ? { textTransform: 'uppercase' }
@@ -131,14 +163,15 @@ const Text = ({
 };
 
 const Material = ({ layer, parentStyles, parentLayer }) => {
-  const { _class, attributedString, frame, style } = layer;
+  const { _class, attributedString, frame, style, name } = layer;
   switch (_class) {
     case 'text':
       return (
         <Frame
           {...frame}
           isVisible={layer.isVisible}
-          styles={{ overflow: 'hidden' }}
+          styles={{ overflow: 'hidden', lineHeight: '12px' }}
+          classLabel={layer.originalObjectID}
         >
           <Text {...style.textStyle.encodedAttributes}>
             {attributedString.string}
@@ -156,7 +189,7 @@ const Material = ({ layer, parentStyles, parentLayer }) => {
 };
 
 const Shape = (props) => {
-  const { children, frame, layers, style, isVisible } = props;
+  const { children, frame, layers, style, isVisible, originalObjectID } = props;
   const shapeType = layers[0]._class;
   switch (shapeType) {
     case 'rectangle':
@@ -164,9 +197,10 @@ const Shape = (props) => {
         <Frame
           {...frame}
           isVisible={isVisible}
+          classLabel={originalObjectID}
           styles={{
             ...getStyles(style),
-            borderRadius: layers[0].points[0].cornerRadius
+            borderRadius: layers[0].points[0].cornerRadius + 2
           }}
         >
           {children}
@@ -193,7 +227,6 @@ const Shape = (props) => {
         </Frame>
       );
     case 'star':
-      console.log(getStyles(style));
       return (
         <Frame {...frame} isVisible={true}>
           <Star {...frame} fill="rgb(221, 221, 221)" />
