@@ -7,6 +7,20 @@ import SimpleDesignData from './sketch/simple.sketch';
 import QuoteCardData from './sketch/quote-card.sketch';
 import { hot } from 'react-hot-loader';
 
+const Star = (props) => {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" {...props}>
+      <title>Star</title>
+      <path
+        d="M50.8,62.4c-0.2,0-0.3,0-0.5-0.1L32,52.5l-18.3,9.8c-0.4,0.2-0.8,0.2-1.1-0.1
+c-0.3-0.2-0.5-0.6-0.4-1l3.5-20.7L0.8,25.8c-0.3-0.3-0.4-0.7-0.3-1.1C0.7,24.4,1,24.1,1.4,24l20.5-3l9.2-18.9
+c0.4-0.7,1.5-0.7,1.9,0L42.1,21l20.5,3c0.4,0.1,0.7,0.3,0.8,0.7c0.1,0.4,0,0.8-0.3,1.1L48.4,40.5l3.5,20.7c0.1,0.4-0.1,0.8-0.4,1
+C51.3,62.4,51,62.4,50.8,62.4"
+      />
+    </svg>
+  );
+};
+
 const getColor = ({ alpha, blue, green, red }) => ({
   alpha,
   blue: Math.round(blue * 255),
@@ -19,6 +33,14 @@ const generateBgStyle = (style) => {
   const { alpha, blue, green, red } = getColor(color);
   return {
     backgroundColor: `rgb(${red}, ${blue}, ${green})`
+  };
+};
+
+const generateFillStyle = (style) => {
+  const { color } = style;
+  const { alpha, blue, green, red } = getColor(color);
+  return {
+    fill: `rgb(${red}, ${blue}, ${green})`
   };
 };
 
@@ -48,7 +70,7 @@ const getStyles = (style) => {
         case 'border':
           return generateBorderStyle(style);
         case 'fill':
-          return generateBgStyle(style);
+          return { ...generateBgStyle(style), ...generateFillStyle(style) };
         default:
           return {};
       }
@@ -171,6 +193,12 @@ const Shape = (props) => {
         </Frame>
       );
     case 'star':
+      console.log(getStyles(style));
+      return (
+        <Frame {...frame} isVisible={true}>
+          <Star {...frame} fill="rgb(221, 221, 221)" />
+        </Frame>
+      );
     case 'bitmap':
     default:
       return (
