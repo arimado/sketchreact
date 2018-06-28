@@ -1,107 +1,116 @@
-const JSZip = require('jszip')
-const { parseBuffer } = require('bplist-parser')
-const { isObject, each, find } = require('lodash')
+const JSZip = require('jszip');
+const { parseBuffer } = require('bplist-parser');
+const { isObject, each, find } = require('lodash');
 
-const parseArchivedValue = value => {
-    return parseBuffer(new Buffer(value, 'base64'))
-}
+const parseArchivedValue = (value) => {
+  return parseBuffer(new Buffer(value, 'base64'));
+};
 
-const parseArchivedString = obj => {
+const parseArchivedString = (obj) => {
   const { $objects } = parseArchivedValue(
     obj.archivedAttributedString.attributes
-  )[0]
-  const nsString = find($objects, value => !!value.NSString)
-  return nsString ? $objects[nsString.NSString.UID] : null
-}
+  )[0];
+  const nsString = find($objects, (value) => !!value.NSString);
+  return nsString ? $objects[nsString.NSString.UID] : null;
+};
 
 const keyedArchiveToObject = ({ $objects }) => {
-  const object = {}
-  const keys = find($objects, value => !!value['NS.keys'])
-  const values = find($objects, value => !!value['NS.objects'])
+  const object = {};
+  const keys = find($objects, (value) => !!value['NS.keys']);
+  const values = find($objects, (value) => !!value['NS.objects']);
   if (keys && values) {
     keys['NS.keys'].forEach((value, index) => {
-      object[$objects[value.UID]] = $objects[values['NS.objects'][index].UID]
-    })
+      object[$objects[value.UID]] = $objects[values['NS.objects'][index].UID];
+    });
   }
-  return object
-}
+  return object;
+};
 
-const parseArchivedTextStyle = obj => {
+const parseArchivedTextStyle = (obj) => {
   const {
     MSAttributedStringFontAttribute,
-    NSParagraphStyle,
-  } = obj.encodedAttributes
+    NSParagraphStyle
+  } = obj.encodedAttributes;
 
   const font = keyedArchiveToObject(
     parseArchivedValue(MSAttributedStringFontAttribute.attributes)[0]
-  )
+  );
 
-  const paragraph = parseArchivedValue(NSParagraphStyle.attributes)[0].$objects[1]
+  const paragraph = parseArchivedValue(NSParagraphStyle.attributes)[0]
+    .$objects[1];
 
   return {
     font,
-    paragraph,
-  }
-}
+    paragraph
+  };
+};
 
-const unarchive = object => {
+const unarchive = (object) => {
   // Text in the Sketch JSON data is serialized with NSKeyedArchiver
   // https://developer.apple.com/documentation/foundation/nskeyedarchiver
   // We only decode this to the extent that we need to.
   each(object, (value, key) => {
-    if (key === 'attributedString' && value._class && value._class === 'attributedString') {
-      object[key] = parseArchivedString(value)
-    } else if (key === 'textStyle' && value._class && value._class === 'textStyle') {
-      object[key] = parseArchivedTextStyle(value)
+    if (
+      key === 'attributedString' &&
+      value._class &&
+      value._class === 'attributedString'
+    ) {
+      object[key] = parseArchivedString(value);
+    } else if (
+      key === 'textStyle' &&
+      value._class &&
+      value._class === 'textStyle'
+    ) {
+      object[key] = parseArchivedTextStyle(value);
     } else if (isObject(value)) {
-      unarchive(value)
+      unarchive(value);
     }
-  })
-}
+  });
+};
 
 const loadJson = (zip, path) =>
   zip
     .file(path)
     .async('string')
-    .then(content => JSON.parse(content))
+    .then((content) => JSON.parse(content));
 
-const loadBuffer = (zip, path) => zip.file(path).async('nodebuffer')
+const loadBuffer = (zip, path) => zip.file(path).async('nodebuffer');
 
 module.exports = function(source) {
+  const callback = this.async();
+  const result = { pages: {} };
+  const promises = [];
 
-  const callback = this.async()
-  const result = { pages: {} }
-  const promises = []
-
-  JSZip.loadAsync(source).then(zip => {
-
+  JSZip.loadAsync(source).then((zip) => {
     each(zip.files, (file, path) => {
-      const jsonMatch = path.match(/^(user|document|meta).json$/)
-      const pageMatch = path.match(/^pages\/(.*).json$/)
-      const imageMatch = path.match(/^images\/(.*)$/)
+      const jsonMatch = path.match(/^(user|document|meta).json$/);
+      const pageMatch = path.match(/^pages\/(.*).json$/);
+      const imageMatch = path.match(/^images\/(.*)$/);
       if (jsonMatch) {
         promises.push(
-          loadJson(zip, path).then(res => (result[jsonMatch[1]] = res))
-        )
+          loadJson(zip, path).then((res) => (result[jsonMatch[1]] = res))
+        );
       } else if (pageMatch) {
         promises.push(
-          loadJson(zip, path).then(res => (result.pages[pageMatch[1]] = res))
-        )
+          loadJson(zip, path).then((res) => (result.pages[pageMatch[1]] = res))
+        );
       } else if (imageMatch) {
+        console.log('##################');
+        console.log('##################');
+        console.log('##################');
         promises.push(
-          loadBuffer(zip, path).then(res => {
-            this.emitFile(path, res)
+          loadBuffer(zip, path).then((res) => {
+            this.emitFile(path, res);
           })
-        )
+        );
       }
-    })
-
+    });
 
     Promise.all(promises).then(() => {
       // unarchive(result)
-      callback(null, 'module.exports = ' + JSON.stringify(result))
-    })
-  })
-}
+      callback(null, 'module.exports = ' + JSON.stringify(result));
+    });
+  });
+};
 
-module.exports.raw = true
+module.exports.raw = true;
