@@ -1,3 +1,37 @@
 body {
   font-family: Lato;
 }
+
+.cardContainer {
+  transition: all 0.5s;
+}
+.textContainer {
+  transition: all 0.5s;
+}
+.showMoreDetails {
+  transition: all 0.5s;
+}
+
+.showMoreDetails:hover {
+  cursor: pointer;
+}
+
+.hireButtons {
+  transition: all 0.5s;
+}
+
+.textAnimation {
+  height: 195px !important;
+}
+
+.cardAnimation {
+  height: 442px !important;
+}
+
+.showMoreAnimation {
+  opacity: 0 !important;
+}
+
+.buttonsAnimation {
+  top: 395px !important;
+}

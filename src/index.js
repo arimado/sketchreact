@@ -80,7 +80,41 @@ const getStyles = (style) => {
     }, {});
 };
 
-const showDetailsClickHandler = (e) => {};
+const showDetailsClickHandler = (e) => {
+  const cardContainerNode = document.getElementsByClassName('cardContainer')[0];
+  const textContainerNode = document.getElementsByClassName('textContainer')[0];
+  const showMoreDetailsNode = document.getElementsByClassName(
+    'showMoreDetails'
+  )[0];
+  const hireButtonsNode = document.getElementsByClassName('hireButtons')[0];
+
+  console.log({
+    cardContainerNode,
+    textContainerNode,
+    showMoreDetailsNode,
+    hireButtonsNode
+  });
+
+  cardContainerNode.classList.toggle('cardAnimation');
+  textContainerNode.classList.toggle('textAnimation');
+  showMoreDetailsNode.classList.toggle('showMoreAnimation');
+  hireButtonsNode.classList.toggle('buttonsAnimation');
+};
+
+const getClassLabel = (label) => {
+  switch (label) {
+    case '5BBCEB03-3BC5-46A3-8BFD-3E0E60597A5F':
+      return 'cardContainer';
+    case 'ED43D44A-311B-4D09-B013-FEE39A969623':
+      return 'textContainer';
+    case '411D6A8B-A708-4F0E-926F-0104E56D3C4C':
+      return 'showMoreDetails';
+    case 'FE86C73B-BED4-4765-92A1-8CDC4837F94A':
+      return 'hireButtons';
+    default:
+      return '';
+  }
+};
 
 const Frame = ({
   x,
@@ -93,6 +127,9 @@ const Frame = ({
   classLabel
 }) => {
   const visibilityStyles = isVisible ? {} : { display: 'none' };
+
+  const externalClassName = getClassLabel(classLabel);
+
   if (classLabel === '411D6A8B-A708-4F0E-926F-0104E56D3C4C') {
     return (
       <div
@@ -105,7 +142,7 @@ const Frame = ({
           ...styles,
           ...visibilityStyles
         }}
-        className={classLabel}
+        className={externalClassName}
         onClick={showDetailsClickHandler}
       >
         {children}
@@ -124,7 +161,7 @@ const Frame = ({
         ...styles,
         ...visibilityStyles
       }}
-      className={classLabel}
+      className={externalClassName}
     >
       {children}
     </div>
@@ -235,7 +272,7 @@ const Shape = (props) => {
     case 'bitmap':
     default:
       return (
-        <Frame {...frame} isVisible={isVisible}>
+        <Frame {...frame} isVisible={isVisible} classLabel={originalObjectID}>
           {children}
         </Frame>
       );
@@ -252,7 +289,11 @@ const buildLayers = (layers, parentStyles = null, parentLayer = null) => {
           );
         default:
           return (
-            <Frame {...layer.frame} isVisible={layer.isVisible}>
+            <Frame
+              {...layer.frame}
+              isVisible={layer.isVisible}
+              classLabel={layer.originalObjectID}
+            >
               {buildLayers(layer.layers, layer.style, layer)}
             </Frame>
           );
